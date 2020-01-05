@@ -1,2 +1,2 @@
-# graphics_jam
+# graphics
 Some coding rush I documented on video.
