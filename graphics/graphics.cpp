@@ -23,7 +23,6 @@ struct SApplication {
 		};
 };
 
-
 LRESULT WINAPI							wndProc				(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam)		{
 	switch(uMsg) {
 	case WM_DESTROY:
@@ -63,6 +62,7 @@ int									update					(SApplication & app)		{
 	double									secondsLastFrame		= app.TimeDelta * .000001;
 	::gph::view<::gph::SColor>				view_colors				= app.ShapeColors;
 
+	app.RectSize						= {app.WindowSize.x / 2, app.WindowSize.y / 2};
 	app.RectPosition.x					+= secondsLastFrame * 100;
 	if(app.RectPosition.x > app.WindowSize.x)
 		app.RectPosition.x					= 0;
@@ -160,5 +160,6 @@ int									main				()		{
 
 		++app.CountFrames;
 	}
+	::cleanup(app);
 	return EXIT_SUCCESS;
 }
