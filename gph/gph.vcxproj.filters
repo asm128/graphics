@@ -24,9 +24,21 @@
     <ClInclude Include="gph_draw.h">
       <Filter>Header Files</Filter>
     </ClInclude>
+    <ClInclude Include="gph_window.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="gph_color.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="gph_container.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="gph_draw.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="gph_window.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
   </ItemGroup>

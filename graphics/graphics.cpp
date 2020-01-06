@@ -1,44 +1,19 @@
 #include "framework.h"
 
-LRESULT WINAPI							wndProc				(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam)		{
-	switch(uMsg) {
-	case WM_DESTROY:
-		PostQuitMessage(0);
-		return 0;
-	}
-	return DefWindowProc(hWnd, uMsg, wParam, lParam);
-}
-
-int										drawBuffer			(HDC hdc, ::gph::view_grid<::gph::SColor> pixels) {
-	BITMAPINFO									bitmapInfo			= {{sizeof(BITMAPINFO)},{}};
-	bitmapInfo.bmiHeader.biWidth			= pixels.metrics().x;
-	bitmapInfo.bmiHeader.biHeight			= pixels.metrics().y;
-	bitmapInfo.bmiHeader.biPlanes			= 1;
-	bitmapInfo.bmiHeader.biBitCount			= 32;
-	bitmapInfo.bmiHeader.biCompression		= BI_RGB;
-	bitmapInfo.bmiHeader.biSizeImage		= pixels.metrics().x * pixels.metrics().y * sizeof(::gph::SColor);
-	bitmapInfo.bmiHeader.biXPelsPerMeter	= 0x0ec4;
-	bitmapInfo.bmiHeader.biYPelsPerMeter	= 0x0ec4;
-	HDC											hdcCompatible		= CreateCompatibleDC(hdc);
-	if(hdcCompatible) {
-		char										* ppvBits			= 0;
-		HBITMAP										backBitmap			= CreateDIBSection(hdcCompatible, &bitmapInfo, DIB_RGB_COLORS, (void**)&ppvBits, 0, 0);
-		if(backBitmap) {
-			SetDIBits(hdcCompatible, backBitmap, 0, pixels.metrics().y, pixels.begin(), &bitmapInfo, DIB_RGB_COLORS);
-			HBITMAP										oldBitmap			= (HBITMAP)SelectObject(hdcCompatible, backBitmap);
-			BitBlt(hdc, 0, 0, pixels.metrics().x, pixels.metrics().y, hdcCompatible, 0, 0, SRCCOPY);
-			SelectObject(hdcCompatible, oldBitmap);
-			DeleteObject(backBitmap);
-		}
-		DeleteDC(hdcCompatible);
-	}
-	return 0;
-}
-
 int									update					(::gph::SApplication & app)		{
-	app.Timer.Tick();
+	if(app.Window.Resized) {
+		app.Pixels.resize(app.Window.Size.x * app.Window.Size.y);
+		memset(app.Pixels.begin(), 0, app.Pixels.size() * sizeof(::gph::SColor));
+		for(int32_t y = 0; y < 2; ++y)
+		for(int32_t x = 0; x < 2; ++x) {
+			::gph::SRectangle<double>				& rectangle					= app.Scene.Rectangle;
+			rectangle.Size						= {app.Window.Size.x / 2.0, app.Window.Size.y / 2.0};
+			rectangle.Offset					= {rectangle.Size.x * x, rectangle.Size.y * y};
+		}
+	}
 	double									secondsLastFrame		= app.Timer.TimeDelta * .000001;
 	::gph::view<::gph::SColor>				view_colors				= app.Scene.ShapeColors;
+
 
 	app.Scene.Rectangle.Size			= {app.Window.Size.x / 2.0, app.Window.Size.y / 2.0};
 	app.Scene.Rectangle.Offset.x		+= secondsLastFrame * 100;
@@ -75,7 +50,7 @@ int									update					(::gph::SApplication & app)		{
 		::gph::SCoord2<int32_t>					offsetLineVertical		= ::gph::SCoord2<int32_t>{(int32_t)(app.Scene.Rectangle.Offset.x * x)		, (int32_t)(app.Scene.Rectangle.Offset.y * y) - 8}	+ (app.Window.Size / 4);
 		::gph::SCoord2<int32_t>					offsetLineHorizontal	= ::gph::SCoord2<int32_t>{(int32_t)(app.Scene.Rectangle.Offset.x * x) - 8	, (int32_t)(app.Scene.Rectangle.Offset.y * y)}		+ (app.Window.Size / 4);
 
-		//::gph::drawRectangle		(pixels, rectangle	, colorRectangle);
+		::gph::drawRectangle		(pixels, rectangle	, colorRectangle);
 		//::gph::drawCircle			(pixels, circle		, colorCircle);
 		//::gph::drawTriangle			(pixels, triangle	, colorLineHorizontal);
 		::gph::drawTriangle				(pixels.metrics(), triangle, pixelCoords);
@@ -117,37 +92,14 @@ int									update					(::gph::SApplication & app)		{
 	}
 
 	++app.CountFrames;
+	app.Timer.Tick();
 	return 0;
 }
 
-int									windowSetup			(::gph::SWindow & window)		{
-	WNDCLASSEX								& wndClass			= window.Class;
-	wndClass.lpszClassName				= window.ClassName;
-	wndClass.lpfnWndProc				= wndProc;
-	wndClass.hInstance					= GetModuleHandle(0);
-	void									* result			= (void*)RegisterClassEx(&wndClass);
-	if(0 == result)
-		return -1;
-	window.Handle						= CreateWindowEx(0, window.ClassName, "Window 0", WS_OVERLAPPEDWINDOW
-		, window.Position.x
-		, window.Position.y
-		, window.Size.x
-		, window.Size.y
-		, 0, 0, wndClass.hInstance, 0
-	);
-	if(0 == window.Handle)
-		return -1;
-	ShowWindow(window.Handle, SW_SHOW);
-	return 0;
-}
-
+int									cleanup				(::gph::SApplication & app)		{ (void)app; return 0; }
 int									setup				(::gph::SApplication & app)		{
-	app.Window.Position					= {100, 100};
-	app.Window.Size						= {1360, 768};
 	app.Pixels.resize(app.Window.Size.x * app.Window.Size.y);
 	memset(app.Pixels.begin(), 0, app.Pixels.size() * sizeof(::gph::SColor));
-	if(-1 == windowSetup(app.Window))
-		return -1;
 
 	app.Scene.ParticlePositions	.resize(app.MAX_PARTICLES);
 	app.Scene.ParticleSpeeds	.resize(app.MAX_PARTICLES);
@@ -162,53 +114,30 @@ int									setup				(::gph::SApplication & app)		{
 	return 0;
 }
 
-int									cleanup				(::gph::SApplication & app)		{
-	UnregisterClass(app.Window.ClassName, app.Window.Class.hInstance);
-	return 0;
-}
-
-int									windowUpdate		(::gph::SApplication & app)		{
-	MSG										msg					= {};
-	bool									running				= true;
-	while(PeekMessage(&msg, 0, 0, 0, PM_REMOVE)) {
-		TranslateMessage(&msg);
-		DispatchMessage(&msg);
-		if(msg.message == WM_QUIT)
-			running								= false;
-	}
-	RECT									clientRect			= {};
-	GetClientRect(app.Window.Handle, &clientRect);
-	if( app.Window.Size.x != clientRect.right
-	 || app.Window.Size.y != clientRect.bottom
-	) {
-		app.Window.Size.x					= clientRect.right	;
-		app.Window.Size.y					= clientRect.bottom;
-		app.Pixels.resize(app.Window.Size.x * app.Window.Size.y);
-		memset(app.Pixels.begin(), 0, app.Pixels.size() * sizeof(::gph::SColor));
-	}
-	return running ? 0 : 1;
-}
 
 int									main				()		{
 	_CrtSetDbgFlag(_CRTDBG_ALLOC_MEM_DF | _CRTDBG_LEAK_CHECK_DF | _CRTDBG_DELAY_FREE_MEM_DF);	// Windows only
 
 	::gph::SApplication						app;
-	if(-1 == setup(app))
+	app.Window.Position					= {100, 100};
+	if(-1 == ::gph::windowSetup(app.Window, {1360, 768}))
+		return -1;
+	if(-1 == ::setup(app))
 		return EXIT_FAILURE;
 
 	bool									running				= true;
-	app.Scene.Rectangle.Offset			= {app.Window.Size.x / 2.0, app.Window.Size.y / 2.0};
-	app.Scene.Rectangle.Size			= {app.Window.Size.x / 2.0, app.Window.Size.y / 2.0};
 	while(running) {
-		if(::windowUpdate(app))
+		if(::gph::windowUpdate(app.Window))
 			running								= false;
 
 		::update(app);
 
 		HDC										dc					= GetDC(app.Window.Handle);
-		::drawBuffer(dc, {app.Pixels.begin(), app.Window.Size.Cast<uint32_t>()});
+		::gph::drawBuffer(dc, {app.Pixels.begin(), app.Window.Size.Cast<uint32_t>()});
 		ReleaseDC(app.Window.Handle, dc);
 	}
 	::cleanup(app);
+
+	::gph::windowCleanup(app.Window);
 	return EXIT_SUCCESS;
 }

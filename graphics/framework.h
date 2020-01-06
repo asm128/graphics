@@ -1,7 +1,6 @@
 #include "gph_draw.h"
 #include "gph_timer.h"
-
-#include <Windows.h>
+#include "gph_window.h"
 
 #ifndef FRAMEWORK_H_29837472983
 #define FRAMEWORK_H_29837472983
@@ -19,14 +18,6 @@ namespace gph
 			, {0, 0, 0xff, 0}
 			, {0xff, 0xff, 0, 0}
 			};
-	};
-
-	struct SWindow {
-		WNDCLASSEX								Class					= {sizeof(WNDCLASSEX),};
-		const char								ClassName	[256]		= "demos_window";
-		::gph::SCoord2<int32_t>					Position				= {100, 100};
-		::gph::SCoord2<int32_t>					Size					= {640, 480};
-		HWND									Handle					= 0;
 	};
 
 	struct SApplication {

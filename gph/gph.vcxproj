@@ -163,12 +163,16 @@
     </Lib>
   </ItemDefinitionGroup>
   <ItemGroup>
+    <ClInclude Include="gph_color.h" />
+    <ClInclude Include="gph_container.h" />
     <ClInclude Include="gph_draw.h" />
     <ClInclude Include="gph_math.h" />
     <ClInclude Include="gph_timer.h" />
+    <ClInclude Include="gph_window.h" />
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="gph_draw.cpp" />
+    <ClCompile Include="gph_window.cpp" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">
