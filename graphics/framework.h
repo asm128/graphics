@@ -1,34 +1,10 @@
-#include <cstdint>
-#include <algorithm>
+#include "gph_math.h"
 
 #ifndef FRAMEWORK_H_29837472983
 #define FRAMEWORK_H_29837472983
 
 namespace gph
 {
-	template<typename _tValue>
-	struct SCoord {
-		_tValue											x;
-		_tValue											y;
-
-		SCoord<_tValue>									operator+				(const SCoord<_tValue> & other)		const	noexcept		{ return { x + other.x, y + other.y }; }
-		SCoord<_tValue>									operator-				(const SCoord<_tValue> & other)		const	noexcept		{ return { x - other.x, y - other.y }; }
-		SCoord<_tValue>									operator/				(double scalar)						const	noexcept		{ return { (int32_t)(x / scalar), (int32_t)(y / scalar) }; }
-		SCoord<_tValue>									operator*				(double scalar)						const	noexcept		{ return { (int32_t)(x * scalar), (int32_t)(y * scalar) }; }
-
-		double											SqLength				()									const	noexcept		{ return x * (double)x + y * (double)y; }
-		double											Length					()									const	noexcept		{
-			const double									squaredLength			= SqLength();
-			return squaredLength ? sqrt(squaredLength) : 0;
-		}
-		template<typename _tOther>
-		SCoord<_tOther>									Cast					()															{ return {(_tOther)x, (_tOther)y}; }
-
-	};
-
-	template<typename _tValue>
-	double											clamp					(_tValue value, _tValue min, _tValue max)					{ return ::std::min(::std::max(min, value), max); }
-
 	struct SColor {
 		uint8_t											r;
 		uint8_t											g;
@@ -71,13 +47,13 @@ namespace gph
 		int												resize				(uint32_t newSize)									{
 			if(newSize < Count)
 				return Count = newSize;
-			_tElement										* newData				= (_tElement*)malloc(sizeof(_tElement) * newSize);
+			_tElement											* newData			= (_tElement*)malloc(sizeof(_tElement) * newSize);
 			if(0 == newData)
 				return -1;
 			if(Data)
 				memcpy(newData, Data, Count * sizeof(_tElement));
-			_tElement										* oldData				= Data;
-			Data										= newData;
+			_tElement											* oldData			= Data;
+			Data											= newData;
 			free(oldData);
 			return Count = newSize;
 		}
@@ -100,11 +76,43 @@ namespace gph
 		inline constexpr	_tElement*					end					()								const	noexcept	{ return Data + size(); }
 	};
 
-	int												setPixel			(::gph::view_grid<::gph::SColor> pixels, ::gph::SCoord<int32_t>	position										, ::gph::SColor color);
-	int												drawRectangle		(::gph::view_grid<::gph::SColor> pixels, ::gph::SCoord<int32_t>	rectPosition, ::gph::SCoord<int32_t> rectSize	, ::gph::SColor color);
-	int												drawCircle			(::gph::view_grid<::gph::SColor> pixels, ::gph::SCoord<int32_t>	rectPosition, double radius						, ::gph::SColor color);
-	int												drawLineVertical	(::gph::view_grid<::gph::SColor> pixels, ::gph::SCoord<int32_t>	linePosition, uint32_t lineLength				, ::gph::SColor color);
-	int												drawLineHorizontal	(::gph::view_grid<::gph::SColor> pixels, ::gph::SCoord<int32_t>	linePosition, uint32_t lineLength				, ::gph::SColor color);
+	int												setPixel			(::gph::view_grid<::gph::SColor> pixels, ::gph::SCoord<int32_t>		position							, ::gph::SColor color);
+	int												drawRectangle		(::gph::view_grid<::gph::SColor> pixels, ::gph::SRectangle<int32_t>	rectangle							, ::gph::SColor color);
+	int												drawCircle			(::gph::view_grid<::gph::SColor> pixels, ::gph::SCircle<int32_t>	circle								, ::gph::SColor color);
+	int												drawLineVertical	(::gph::view_grid<::gph::SColor> pixels, ::gph::SCoord<int32_t>		linePosition, uint32_t lineLength	, ::gph::SColor color);
+	int												drawLineHorizontal	(::gph::view_grid<::gph::SColor> pixels, ::gph::SCoord<int32_t>		linePosition, uint32_t lineLength	, ::gph::SColor color);
+	int												drawLine			(::gph::view_grid<::gph::SColor> pixels, ::gph::SLine<int32_t> line, ::gph::SColor color);
+
+	template<typename _tValue>
+	void											drawTriangle			(view_grid<SColor> pixels, const STriangle<_tValue>& triangle, const SColor& color)	{
+		// Compute triangle bounding box
+		int32_t												minX					= (int32_t)min3(triangle.A.x, triangle.B.x, triangle.C.x);
+		int32_t												minY					= (int32_t)min3(triangle.A.y, triangle.B.y, triangle.C.y);
+		int32_t												maxX					= (int32_t)max3(triangle.A.x, triangle.B.x, triangle.C.x);
+		int32_t												maxY					= (int32_t)max3(triangle.A.y, triangle.B.y, triangle.C.y);
+
+		// Clip against screen bounds
+		minX											= ::std::max(minX, 0);
+		minY											= ::std::max(minY, 0);
+		maxX											= ::std::min(maxX, (int32_t)pixels.metrics().x - 1);
+		maxY											= ::std::min(maxY, (int32_t)pixels.metrics().y - 1);
+
+		// Rasterize
+		SCoord<int32_t>										p;
+		for (p.y = minY; p.y <= maxY; ++p.y)
+		for (p.x = minX; p.x <= maxX; ++p.x) {
+			// Determine barycentric coordinates
+			int													w0						= orient2d(triangle.B, triangle.C, p);
+			int													w1						= orient2d(triangle.C, triangle.A, p);
+			int													w2						= orient2d(triangle.A, triangle.B, p);
+
+			// If p is on or inside all edges, render pixel.
+			(void)color;
+			if (w0 >= 0 && w1 >= 0 && w2 >= 0)
+				setPixel(pixels, p, {(uint8_t)w0, (uint8_t)w1, (uint8_t)w2});//color); //, w0, w1, w2);
+		}
+	}
+
 } // namespace
 
 #endif // FRAMEWORK_H_29837472983

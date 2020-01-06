@@ -29,5 +29,8 @@
     <ClInclude Include="gph_timer.h">
       <Filter>Header Files</Filter>
     </ClInclude>
+    <ClInclude Include="gph_math.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
   </ItemGroup>
 </Project>

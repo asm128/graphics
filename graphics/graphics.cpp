@@ -3,23 +3,11 @@
 
 #include <Windows.h>
 
-struct SWindow {
-	WNDCLASSEX								Class				= {sizeof(WNDCLASSEX),};
-	const char								ClassName	[256]	= "demos_window";
-	::gph::SCoord<int32_t>					Position			= {100, 100};
-	::gph::SCoord<int32_t>					Size				= {640, 480};
-	HWND									Handle				= 0;
-};
-
-;
-
-
 struct SScene {
 	::gph::container<::gph::SCoord<float>>	ParticlePositions		= {};
 	::gph::container<float>					ParticleSpeeds			= {};
 
-	::gph::SCoord<double>					RectPosition			= {};
-	::gph::SCoord<int32_t>					RectSize				= {};
+	::gph::SRectangle<double>				Rectangle				= {};
 	::gph::SColor							ShapeColors	[4]			=
 		{ {0xff, 0, 0, 0}
 		, {0, 0xff, 0, 0}
@@ -28,7 +16,18 @@ struct SScene {
 		};
 };
 
+struct SWindow {
+	WNDCLASSEX								Class				= {sizeof(WNDCLASSEX),};
+	const char								ClassName	[256]	= "demos_window";
+	::gph::SCoord<int32_t>					Position			= {100, 100};
+	::gph::SCoord<int32_t>					Size				= {640, 480};
+	HWND									Handle				= 0;
+};
+
 struct SApplication {
+	const uint32_t							MAX_PARTICLES			= 64;
+	const double							GRAVITY					= 9.8;
+
 	SWindow									Window					= {};
 	::gph::STimer							Timer					= {};
 	::SScene								Scene					= {};
@@ -76,10 +75,16 @@ int									update					(SApplication & app)		{
 	double									secondsLastFrame		= app.Timer.TimeDelta * .000001;
 	::gph::view<::gph::SColor>				view_colors				= app.Scene.ShapeColors;
 
-	app.Scene.RectSize					= {app.Window.Size.x / 2, app.Window.Size.y / 2};
-	app.Scene.RectPosition.x			+= secondsLastFrame * 100;
-	if( app.Scene.RectPosition.x > app.Window.Size.x )
-		app.Scene.RectPosition.x					= 0;
+	app.Scene.Rectangle.Size			= {app.Window.Size.x / 2.0, app.Window.Size.y / 2.0};
+	app.Scene.Rectangle.Offset.x		+= secondsLastFrame * 100;
+
+	::gph::view_grid<::gph::SColor>			pixels					= {app.Pixels.begin(), app.Window.Size.Cast<uint32_t>()};
+	if( app.Scene.Rectangle.Offset.x > app.Window.Size.x )
+		app.Scene.Rectangle.Offset.x		= 0;
+
+	::gph::STriangle<int32_t>				triangle				= {};
+	::gph::SRectangle<int32_t>				rectangle				= {{}, app.Scene.Rectangle.Size.Cast<int32_t>()};
+	::gph::SCircle<int32_t>					circle					= {{}, 16};
 	for(int32_t y = 0; y < 2; ++y)
 	for(int32_t x = 0; x < 2; ++x) {
 		int32_t									colorIndex				= y * 2 + x;
@@ -87,27 +92,35 @@ int									update					(SApplication & app)		{
 		const ::gph::SColor						colorCircle				= view_colors[(colorIndex + 1ULL) % ::std::size(app.Scene.ShapeColors)];
 		const ::gph::SColor						colorLineHorizontal		= view_colors[(colorIndex + 2ULL) % ::std::size(app.Scene.ShapeColors)];
 		const ::gph::SColor						colorLineVertical		= view_colors[(colorIndex + 3ULL) % ::std::size(app.Scene.ShapeColors)];
+		triangle.A							= {10 * y + (int32_t)(app.Scene.Rectangle.Offset.x * x) / 6	, y * 50 + (int32_t)(app.Scene.Rectangle.Offset.x * x) / 2};
+		triangle.B							= {20 * y + (int32_t)(app.Scene.Rectangle.Offset.x * x) / 2	, y * 60 + (int32_t)(app.Scene.Rectangle.Offset.x * x) / 8};
+		triangle.C							= {30 * y + (int32_t)(app.Scene.Rectangle.Offset.x * x) / 4	, y * 70 + (int32_t)(app.Scene.Rectangle.Offset.x * x)};
+		rectangle	.Offset					= {(int32_t)(app.Scene.Rectangle.Offset.x * x)			, (int32_t)(app.Scene.Rectangle.Offset.y * y)};
+		circle		.Offset					= ::gph::SCoord<int32_t>{(int32_t)(app.Scene.Rectangle.Offset.x * x), (int32_t)(app.Scene.Rectangle.Offset.y * y)} + (app.Window.Size / 4);
+		::gph::SCoord<int32_t>					offsetLineVertical		= ::gph::SCoord<int32_t>{(int32_t)(app.Scene.Rectangle.Offset.x * x)		, (int32_t)(app.Scene.Rectangle.Offset.y * y) - 8}	+ (app.Window.Size / 4);
+		::gph::SCoord<int32_t>					offsetLineHorizontal	= ::gph::SCoord<int32_t>{(int32_t)(app.Scene.Rectangle.Offset.x * x) - 8	, (int32_t)(app.Scene.Rectangle.Offset.y * y)}		+ (app.Window.Size / 4);
+		::gph::drawRectangle		(pixels, rectangle	, colorRectangle);
+		::gph::drawCircle			(pixels, circle		, colorCircle);
+		::gph::drawTriangle			(pixels, triangle	, colorLineHorizontal);
+		::gph::drawLineVertical		(pixels, offsetLineVertical		, 16	, colorLineVertical		);
+		::gph::drawLineHorizontal	(pixels, offsetLineHorizontal	, 16	, colorLineHorizontal	);
+		::gph::drawLine				(pixels, {offsetLineVertical	+::gph::SCoord<int32_t>{+8, }, offsetLineVertical		+ ::gph::SCoord<int32_t>{-8, 16}}, colorLineVertical	);
+		::gph::drawLine				(pixels, {offsetLineHorizontal	+::gph::SCoord<int32_t>{0, -8}, offsetLineHorizontal	+ ::gph::SCoord<int32_t>{16, +8}}, colorLineHorizontal	);
 
-		::gph::drawRectangle		({app.Pixels.begin(), app.Window.Size.Cast<uint32_t>()}, ::gph::SCoord<int32_t>{(int32_t)(app.Scene.RectPosition.x * x)		, (int32_t)(app.Scene.RectPosition.y * y)}		, app.Scene.RectSize		, colorRectangle			);
-		::gph::drawCircle			({app.Pixels.begin(), app.Window.Size.Cast<uint32_t>()}, ::gph::SCoord<int32_t>{(int32_t)(app.Scene.RectPosition.x * x)		, (int32_t)(app.Scene.RectPosition.y * y)}		+ (app.Window.Size / 4), 16	, colorCircle				);
-		::gph::drawLineVertical		({app.Pixels.begin(), app.Window.Size.Cast<uint32_t>()}, ::gph::SCoord<int32_t>{(int32_t)(app.Scene.RectPosition.x * x)		, (int32_t)(app.Scene.RectPosition.y * y) - 8}	+ (app.Window.Size / 4), 16	, colorLineHorizontal		);
-		::gph::drawLineHorizontal	({app.Pixels.begin(), app.Window.Size.Cast<uint32_t>()}, ::gph::SCoord<int32_t>{(int32_t)(app.Scene.RectPosition.x * x) - 8	, (int32_t)(app.Scene.RectPosition.y * y)}		+ (app.Window.Size / 4), 16	, colorLineVertical			);
+		::gph::drawLine				(pixels, {triangle.A, triangle.B}, colorCircle);
+		::gph::drawLine				(pixels, {triangle.B, triangle.C}, colorCircle);
+		::gph::drawLine				(pixels, {triangle.C, triangle.A}, colorCircle);
 	}
 
 	for(uint32_t iParticle = 0; iParticle < app.Scene.ParticlePositions.size(); ++iParticle) {
-		::gph::SCoord<float>						& particlePosition		= app.Scene.ParticlePositions[iParticle];
-		float										& particleSpeed			= app.Scene.ParticleSpeeds[iParticle];
-		particlePosition.y						+= (float)(particleSpeed * secondsLastFrame);
+		::gph::SCoord<float>					& particlePosition		= app.Scene.ParticlePositions[iParticle];
+		float									& particleSpeed			= app.Scene.ParticleSpeeds[iParticle];
+		particleSpeed						+= float(app.GRAVITY * secondsLastFrame);
+		particlePosition.y					+= (float)(particleSpeed * secondsLastFrame);
 		if( particlePosition.y >= app.Window.Size.y)
-			particlePosition.y						= 0;
+			particlePosition.y					= 0;
 		if(0 == (rand() % 16)) ++particlePosition.x;
 		if(0 == (rand() % 16)) --particlePosition.x;
-		if(particlePosition.x < 0) particlePosition.x = 0;
-		if(particlePosition.x >= app.Window.Size.x) particlePosition.x = app.Window.Size.x - 1.0f;
-			 if(0 == (rand() % 16)) particleSpeed *= 0.9999999f;
-		else if(0 == (rand() % 16)) particleSpeed *= 1.1111111f;
-		if(particleSpeed > 330) particleSpeed = 330;
-		if(particleSpeed < 1) particleSpeed = 1;
 		::gph::setPixel({app.Pixels.begin(), app.Window.Size.Cast<uint32_t>()}, {(int32_t)particlePosition.x, (int32_t)(app.Window.Size.y - particlePosition.y)}, view_colors[iParticle % view_colors.size()]);
 	}
 
@@ -144,15 +157,15 @@ int									setup				(SApplication & app)		{
 	if(-1 == windowSetup(app.Window))
 		return -1;
 
-	app.Scene.ParticlePositions	.resize(256);
-	app.Scene.ParticleSpeeds	.resize(256);
+	app.Scene.ParticlePositions	.resize(app.MAX_PARTICLES);
+	app.Scene.ParticleSpeeds	.resize(app.MAX_PARTICLES);
 	memset(app.Scene.ParticlePositions	.begin(), 0, app.Scene.ParticlePositions.size() * sizeof(::gph::SCoord<float>));
 	memset(app.Scene.ParticleSpeeds		.begin(), 0, app.Scene.ParticleSpeeds	.size() * sizeof(float));
 	for(uint32_t iParticle = 0; iParticle < app.Scene.ParticlePositions.size(); ++iParticle) {
 		::gph::SCoord<float>					& particlePosition		= app.Scene.ParticlePositions[iParticle];
 		float									& particleSpeed			= app.Scene.ParticleSpeeds[iParticle];
 		particlePosition.x					= (float)(rand() % app.Window.Size.x);
-		particleSpeed						= 9.8f;
+		particleSpeed						= float(rand() % 9);
 	}
 	return 0;
 }
@@ -192,8 +205,8 @@ int									main				()		{
 		return EXIT_FAILURE;
 
 	bool									running				= true;
-	app.Scene.RectPosition				= {app.Window.Size.x / 2.0, app.Window.Size.y / 2.0};
-	app.Scene.RectSize					= {app.Window.Size.x / 2, app.Window.Size.y / 2};
+	app.Scene.Rectangle.Offset			= {app.Window.Size.x / 2.0, app.Window.Size.y / 2.0};
+	app.Scene.Rectangle.Size			= {app.Window.Size.x / 2.0, app.Window.Size.y / 2.0};
 	while(running) {
 		if(::windowUpdate(app))
 			running								= false;

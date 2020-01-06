@@ -14,27 +14,25 @@ int										gph::setPixel
 
 int										gph::drawRectangle
 	(	::gph::view_grid<::gph::SColor> pixels
-	,	::gph::SCoord<int32_t>	rectPosition
-	,	::gph::SCoord<int32_t>	rectSize
-	,	::gph::SColor			color
+	,	::gph::SRectangle<int32_t>		rectangle
+	,	::gph::SColor					color
 	) {
-	for(int32_t y = 0; y < rectSize.y; ++y)
-	for(int32_t x = 0; x < rectSize.x; ++x)
-		::gph::setPixel(pixels, {rectPosition.x + x, rectPosition.y + y}, color);
+	for(int32_t y = 0; y < rectangle.Size.y; ++y)
+	for(int32_t x = 0; x < rectangle.Size.x; ++x)
+		::gph::setPixel(pixels, {rectangle.Offset.x + x, rectangle.Offset.y + y}, color);
 	return 0;
 }
 
 int										gph::drawCircle
 	(	::gph::view_grid<::gph::SColor> pixels
-	,	::gph::SCoord<int32_t>	rectPosition
-	,	double					radius
+	,	::gph::SCircle<int32_t>	circle
 	,	::gph::SColor			color
 	) {
-	for(int32_t y = -(int32_t)radius; y < (int32_t)radius; ++y)
-	for(int32_t x = -(int32_t)radius; x < (int32_t)radius; ++x) {
+	for(int32_t y = -(int32_t)circle.Radius; y < (int32_t)circle.Radius; ++y)
+	for(int32_t x = -(int32_t)circle.Radius; x < (int32_t)circle.Radius; ++x) {
 		const ::gph::SCoord<int32_t>				position				= {x, y};
-		if(position.Length() <= radius)
-			::gph::setPixel(pixels, {rectPosition.x + x, rectPosition.y + y}, color);
+		if(position.Length() <= circle.Radius)
+			::gph::setPixel(pixels, {circle.Offset.x + x, circle.Offset.y + y}, color);
 	}
 	return 0;
 }
@@ -58,5 +56,29 @@ int										gph::drawLineHorizontal
 	) {
 	for(int32_t x = 0; x < (int32_t)lineLength; ++x)
 		::gph::setPixel(pixels, {linePosition.x + x, linePosition.y}, color);
+	return 0;
+}
+
+int										gph::drawLine			(::gph::view_grid<::gph::SColor> pixels, ::gph::SLine<int32_t> line, ::gph::SColor color) {
+	int32_t										dx						= abs(line.B.x - line.A.x);
+	int32_t										dy						= -abs(line.B.y - line.A.y);
+	int32_t										sx						= line.A.x < line.B.x ? 1 : -1;
+	int32_t										sy						= line.A.y < line.B.y ? 1 : -1;
+	int32_t										err						= dx + dy;  // error value e_xy
+	while (true) {
+		if (line.A.x == line.B.x && line.A.y == line.B.y)
+			break;
+		int32_t										e2						= 2 * err;
+		if (e2 >= dy) {
+			err										+= dy; // e_xy + e_x > 0
+			line.A.x								+= sx;
+			setPixel(pixels, line.A, color);
+		}
+		if (e2 <= dx) { // e_xy + e_y < 0
+			err										+= dx;
+			line.A.y								+= sy;
+			setPixel(pixels, line.A, color);
+		}
+	}
 	return 0;
 }
