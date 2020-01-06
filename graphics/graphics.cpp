@@ -4,7 +4,7 @@
 #include <Windows.h>
 
 struct SScene {
-	::gph::container<::gph::SCoord<float>>	ParticlePositions		= {};
+	::gph::container<::gph::SCoord2<float>>	ParticlePositions		= {};
 	::gph::container<float>					ParticleSpeeds			= {};
 
 	::gph::SRectangle<double>				Rectangle				= {};
@@ -19,8 +19,8 @@ struct SScene {
 struct SWindow {
 	WNDCLASSEX								Class				= {sizeof(WNDCLASSEX),};
 	const char								ClassName	[256]	= "demos_window";
-	::gph::SCoord<int32_t>					Position			= {100, 100};
-	::gph::SCoord<int32_t>					Size				= {640, 480};
+	::gph::SCoord2<int32_t>					Position			= {100, 100};
+	::gph::SCoord2<int32_t>					Size				= {640, 480};
 	HWND									Handle				= 0;
 };
 
@@ -96,16 +96,16 @@ int									update					(SApplication & app)		{
 		triangle.B							= {20 * y + (int32_t)(app.Scene.Rectangle.Offset.x * x) / 2	, y * 60 + (int32_t)(app.Scene.Rectangle.Offset.x * x) / 8};
 		triangle.C							= {30 * y + (int32_t)(app.Scene.Rectangle.Offset.x * x) / 4	, y * 70 + (int32_t)(app.Scene.Rectangle.Offset.x * x)};
 		rectangle	.Offset					= {(int32_t)(app.Scene.Rectangle.Offset.x * x)			, (int32_t)(app.Scene.Rectangle.Offset.y * y)};
-		circle		.Offset					= ::gph::SCoord<int32_t>{(int32_t)(app.Scene.Rectangle.Offset.x * x), (int32_t)(app.Scene.Rectangle.Offset.y * y)} + (app.Window.Size / 4);
-		::gph::SCoord<int32_t>					offsetLineVertical		= ::gph::SCoord<int32_t>{(int32_t)(app.Scene.Rectangle.Offset.x * x)		, (int32_t)(app.Scene.Rectangle.Offset.y * y) - 8}	+ (app.Window.Size / 4);
-		::gph::SCoord<int32_t>					offsetLineHorizontal	= ::gph::SCoord<int32_t>{(int32_t)(app.Scene.Rectangle.Offset.x * x) - 8	, (int32_t)(app.Scene.Rectangle.Offset.y * y)}		+ (app.Window.Size / 4);
+		circle		.Offset					= ::gph::SCoord2<int32_t>{(int32_t)(app.Scene.Rectangle.Offset.x * x), (int32_t)(app.Scene.Rectangle.Offset.y * y)} + (app.Window.Size / 4);
+		::gph::SCoord2<int32_t>					offsetLineVertical		= ::gph::SCoord2<int32_t>{(int32_t)(app.Scene.Rectangle.Offset.x * x)		, (int32_t)(app.Scene.Rectangle.Offset.y * y) - 8}	+ (app.Window.Size / 4);
+		::gph::SCoord2<int32_t>					offsetLineHorizontal	= ::gph::SCoord2<int32_t>{(int32_t)(app.Scene.Rectangle.Offset.x * x) - 8	, (int32_t)(app.Scene.Rectangle.Offset.y * y)}		+ (app.Window.Size / 4);
 		::gph::drawRectangle		(pixels, rectangle	, colorRectangle);
 		::gph::drawCircle			(pixels, circle		, colorCircle);
 		::gph::drawTriangle			(pixels, triangle	, colorLineHorizontal);
 		::gph::drawLineVertical		(pixels, offsetLineVertical		, 16	, colorLineVertical		);
 		::gph::drawLineHorizontal	(pixels, offsetLineHorizontal	, 16	, colorLineHorizontal	);
-		::gph::drawLine				(pixels, {offsetLineVertical	+::gph::SCoord<int32_t>{+8, }, offsetLineVertical		+ ::gph::SCoord<int32_t>{-8, 16}}, colorLineVertical	);
-		::gph::drawLine				(pixels, {offsetLineHorizontal	+::gph::SCoord<int32_t>{0, -8}, offsetLineHorizontal	+ ::gph::SCoord<int32_t>{16, +8}}, colorLineHorizontal	);
+		::gph::drawLine				(pixels, {offsetLineVertical	+::gph::SCoord2<int32_t>{+8, }, offsetLineVertical		+ ::gph::SCoord2<int32_t>{-8, 16}}, colorLineVertical	);
+		::gph::drawLine				(pixels, {offsetLineHorizontal	+::gph::SCoord2<int32_t>{0, -8}, offsetLineHorizontal	+ ::gph::SCoord2<int32_t>{16, +8}}, colorLineHorizontal	);
 
 		::gph::drawLine				(pixels, {triangle.A, triangle.B}, colorCircle);
 		::gph::drawLine				(pixels, {triangle.B, triangle.C}, colorCircle);
@@ -113,7 +113,7 @@ int									update					(SApplication & app)		{
 	}
 
 	for(uint32_t iParticle = 0; iParticle < app.Scene.ParticlePositions.size(); ++iParticle) {
-		::gph::SCoord<float>					& particlePosition		= app.Scene.ParticlePositions[iParticle];
+		::gph::SCoord2<float>					& particlePosition		= app.Scene.ParticlePositions[iParticle];
 		float									& particleSpeed			= app.Scene.ParticleSpeeds[iParticle];
 		particleSpeed						+= float(app.GRAVITY * secondsLastFrame);
 		particlePosition.y					+= (float)(particleSpeed * secondsLastFrame);
@@ -136,7 +136,7 @@ int									windowSetup	(SWindow & window)		{
 	void									* result			= (void*)RegisterClassEx(&wndClass);
 	if(0 == result)
 		return -1;
-	window.Handle					= CreateWindowEx(0, window.ClassName, "Window 0", WS_OVERLAPPEDWINDOW
+	window.Handle						= CreateWindowEx(0, window.ClassName, "Window 0", WS_OVERLAPPEDWINDOW
 		, window.Position.x
 		, window.Position.y
 		, window.Size.x
@@ -159,10 +159,10 @@ int									setup				(SApplication & app)		{
 
 	app.Scene.ParticlePositions	.resize(app.MAX_PARTICLES);
 	app.Scene.ParticleSpeeds	.resize(app.MAX_PARTICLES);
-	memset(app.Scene.ParticlePositions	.begin(), 0, app.Scene.ParticlePositions.size() * sizeof(::gph::SCoord<float>));
+	memset(app.Scene.ParticlePositions	.begin(), 0, app.Scene.ParticlePositions.size() * sizeof(::gph::SCoord2<float>));
 	memset(app.Scene.ParticleSpeeds		.begin(), 0, app.Scene.ParticleSpeeds	.size() * sizeof(float));
 	for(uint32_t iParticle = 0; iParticle < app.Scene.ParticlePositions.size(); ++iParticle) {
-		::gph::SCoord<float>					& particlePosition		= app.Scene.ParticlePositions[iParticle];
+		::gph::SCoord2<float>					& particlePosition		= app.Scene.ParticlePositions[iParticle];
 		float									& particleSpeed			= app.Scene.ParticleSpeeds[iParticle];
 		particlePosition.x					= (float)(rand() % app.Window.Size.x);
 		particleSpeed						= float(rand() % 9);

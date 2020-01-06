@@ -2,7 +2,7 @@
 
 int										gph::setPixel
 	(	::gph::view_grid<::gph::SColor>		pixels
-	,	::gph::SCoord<int32_t>				position
+	,	::gph::SCoord2<int32_t>				position
 	,	::gph::SColor						color
 	) {
 	if( position.x >= 0 && position.x < (int32_t)pixels.metrics().x
@@ -30,7 +30,7 @@ int										gph::drawCircle
 	) {
 	for(int32_t y = -(int32_t)circle.Radius; y < (int32_t)circle.Radius; ++y)
 	for(int32_t x = -(int32_t)circle.Radius; x < (int32_t)circle.Radius; ++x) {
-		const ::gph::SCoord<int32_t>				position				= {x, y};
+		const ::gph::SCoord2<int32_t>				position				= {x, y};
 		if(position.Length() <= circle.Radius)
 			::gph::setPixel(pixels, {circle.Offset.x + x, circle.Offset.y + y}, color);
 	}
@@ -39,7 +39,7 @@ int										gph::drawCircle
 
 int										gph::drawLineVertical
 	(	::gph::view_grid<::gph::SColor> pixels
-	,	::gph::SCoord<int32_t>	linePosition
+	,	::gph::SCoord2<int32_t>	linePosition
 	,	uint32_t				lineLength
 	,	::gph::SColor			color
 	) {
@@ -50,7 +50,7 @@ int										gph::drawLineVertical
 
 int										gph::drawLineHorizontal
 	(	::gph::view_grid<::gph::SColor> pixels
-	,	::gph::SCoord<int32_t>	linePosition
+	,	::gph::SCoord2<int32_t>	linePosition
 	,	uint32_t				lineLength
 	,	::gph::SColor			color
 	) {

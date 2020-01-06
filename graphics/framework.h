@@ -63,24 +63,24 @@ namespace gph
 	struct view_grid {
 	protected:
 		_tElement										* Data				= 0;
-		SCoord<uint32_t>								Metrics				= 0;
+		SCoord2<uint32_t>								Metrics				= 0;
 	public:
-														view_grid			(_tElement *elements, SCoord<uint32_t> metrics)		: Data(elements), Metrics(metrics)	{ if((metrics.x || metrics.y) && 0 == elements) { throw(""); } }
+														view_grid			(_tElement *elements, SCoord2<uint32_t> metrics)		: Data(elements), Metrics(metrics)	{ if((metrics.x || metrics.y) && 0 == elements) { throw(""); } }
 
 		::gph::view<_tElement>							operator[]			(uint32_t row)										{ if(row >= Metrics.y) { throw(""); } return ::gph::view<_tElement		>{&Data[row * Metrics.x], Metrics.x}; }
 		::gph::view<const _tElement>					operator[]			(uint32_t row)					const				{ if(row >= Metrics.y) { throw(""); } return ::gph::view<const _tElement>{&Data[row * Metrics.x], Metrics.x}; }
 
-		inline constexpr	const SCoord<uint32_t>&		metrics				()													{ return Metrics; }
+		inline constexpr	const SCoord2<uint32_t>&		metrics				()													{ return Metrics; }
 		inline constexpr	_tElement*					size				()								const	noexcept	{ return Metrics.x * Metrics.y; }
 		inline constexpr	_tElement*					begin				()								const	noexcept	{ return Data; }
 		inline constexpr	_tElement*					end					()								const	noexcept	{ return Data + size(); }
 	};
 
-	int												setPixel			(::gph::view_grid<::gph::SColor> pixels, ::gph::SCoord<int32_t>		position							, ::gph::SColor color);
+	int												setPixel			(::gph::view_grid<::gph::SColor> pixels, ::gph::SCoord2<int32_t>		position							, ::gph::SColor color);
 	int												drawRectangle		(::gph::view_grid<::gph::SColor> pixels, ::gph::SRectangle<int32_t>	rectangle							, ::gph::SColor color);
 	int												drawCircle			(::gph::view_grid<::gph::SColor> pixels, ::gph::SCircle<int32_t>	circle								, ::gph::SColor color);
-	int												drawLineVertical	(::gph::view_grid<::gph::SColor> pixels, ::gph::SCoord<int32_t>		linePosition, uint32_t lineLength	, ::gph::SColor color);
-	int												drawLineHorizontal	(::gph::view_grid<::gph::SColor> pixels, ::gph::SCoord<int32_t>		linePosition, uint32_t lineLength	, ::gph::SColor color);
+	int												drawLineVertical	(::gph::view_grid<::gph::SColor> pixels, ::gph::SCoord2<int32_t>		linePosition, uint32_t lineLength	, ::gph::SColor color);
+	int												drawLineHorizontal	(::gph::view_grid<::gph::SColor> pixels, ::gph::SCoord2<int32_t>		linePosition, uint32_t lineLength	, ::gph::SColor color);
 	int												drawLine			(::gph::view_grid<::gph::SColor> pixels, ::gph::SLine<int32_t> line, ::gph::SColor color);
 
 	template<typename _tValue>
@@ -98,7 +98,7 @@ namespace gph
 		maxY											= ::std::min(maxY, (int32_t)pixels.metrics().y - 1);
 
 		// Rasterize
-		SCoord<int32_t>										p;
+		SCoord2<int32_t>										p;
 		for (p.y = minY; p.y <= maxY; ++p.y)
 		for (p.x = minX; p.x <= maxX; ++p.x) {
 			// Determine barycentric coordinates
