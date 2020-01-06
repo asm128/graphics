@@ -4,6 +4,16 @@ Microsoft Visual Studio Solution File, Format Version 12.00
 VisualStudioVersion = 16.0.29613.14
 MinimumVisualStudioVersion = 10.0.40219.1
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "graphics", "graphics\graphics.vcxproj", "{DC5B952D-3CD9-482E-A888-C6F3FD86DF8B}"
+	ProjectSection(ProjectDependencies) = postProject
+		{1B50916D-38D2-4075-BDDA-98ED96706C73} = {1B50916D-38D2-4075-BDDA-98ED96706C73}
+	EndProjectSection
+EndProject
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "graphics_1", "graphics_1\graphics_1.vcxproj", "{A3053917-90EF-4BD5-8DB6-028EAF927838}"
+	ProjectSection(ProjectDependencies) = postProject
+		{1B50916D-38D2-4075-BDDA-98ED96706C73} = {1B50916D-38D2-4075-BDDA-98ED96706C73}
+	EndProjectSection
+EndProject
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "gph", "gph\gph.vcxproj", "{1B50916D-38D2-4075-BDDA-98ED96706C73}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -21,6 +31,22 @@ Global
 		{DC5B952D-3CD9-482E-A888-C6F3FD86DF8B}.Release|x64.Build.0 = Release|x64
 		{DC5B952D-3CD9-482E-A888-C6F3FD86DF8B}.Release|x86.ActiveCfg = Release|Win32
 		{DC5B952D-3CD9-482E-A888-C6F3FD86DF8B}.Release|x86.Build.0 = Release|Win32
+		{A3053917-90EF-4BD5-8DB6-028EAF927838}.Debug|x64.ActiveCfg = Debug|x64
+		{A3053917-90EF-4BD5-8DB6-028EAF927838}.Debug|x64.Build.0 = Debug|x64
+		{A3053917-90EF-4BD5-8DB6-028EAF927838}.Debug|x86.ActiveCfg = Debug|Win32
+		{A3053917-90EF-4BD5-8DB6-028EAF927838}.Debug|x86.Build.0 = Debug|Win32
+		{A3053917-90EF-4BD5-8DB6-028EAF927838}.Release|x64.ActiveCfg = Release|x64
+		{A3053917-90EF-4BD5-8DB6-028EAF927838}.Release|x64.Build.0 = Release|x64
+		{A3053917-90EF-4BD5-8DB6-028EAF927838}.Release|x86.ActiveCfg = Release|Win32
+		{A3053917-90EF-4BD5-8DB6-028EAF927838}.Release|x86.Build.0 = Release|Win32
+		{1B50916D-38D2-4075-BDDA-98ED96706C73}.Debug|x64.ActiveCfg = Debug|x64
+		{1B50916D-38D2-4075-BDDA-98ED96706C73}.Debug|x64.Build.0 = Debug|x64
+		{1B50916D-38D2-4075-BDDA-98ED96706C73}.Debug|x86.ActiveCfg = Debug|Win32
+		{1B50916D-38D2-4075-BDDA-98ED96706C73}.Debug|x86.Build.0 = Debug|Win32
+		{1B50916D-38D2-4075-BDDA-98ED96706C73}.Release|x64.ActiveCfg = Release|x64
+		{1B50916D-38D2-4075-BDDA-98ED96706C73}.Release|x64.Build.0 = Release|x64
+		{1B50916D-38D2-4075-BDDA-98ED96706C73}.Release|x86.ActiveCfg = Release|Win32
+		{1B50916D-38D2-4075-BDDA-98ED96706C73}.Release|x86.Build.0 = Release|Win32
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

@@ -1,4 +1,4 @@
-#include "framework.h"
+#include "gph_draw.h"
 
 int										gph::setPixel
 	(	::gph::view_grid<::gph::SColor>		pixels
@@ -65,19 +65,21 @@ int										gph::drawLine			(::gph::view_grid<::gph::SColor> pixels, ::gph::SLi
 	int32_t										sx						= line.A.x < line.B.x ? 1 : -1;
 	int32_t										sy						= line.A.y < line.B.y ? 1 : -1;
 	int32_t										err						= dx + dy;  // error value e_xy
+	::gph::setPixel(pixels, line.A, color);
 	while (true) {
 		if (line.A.x == line.B.x && line.A.y == line.B.y)
 			break;
 		int32_t										e2						= 2 * err;
-		if (e2 >= dy) {
-			err										+= dy; // e_xy + e_x > 0
-			line.A.x								+= sx;
-			setPixel(pixels, line.A, color);
-		}
-		if (e2 <= dx) { // e_xy + e_y < 0
-			err										+= dx;
-			line.A.y								+= sy;
-			setPixel(pixels, line.A, color);
+		if (e2 >= dy || e2 <= dx) { // e_xy + e_y < 0
+			if (e2 >= dy) {
+				err										+= dy; // e_xy + e_x > 0
+				line.A.x								+= sx;
+			}
+			if (e2 <= dx) { // e_xy + e_y < 0
+				err										+= dx;
+				line.A.y								+= sy;
+			}
+			::gph::setPixel(pixels, line.A, color);
 		}
 	}
 	return 0;
