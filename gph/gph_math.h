@@ -6,6 +6,16 @@
 
 namespace gph
 {
+
+	template<typename _tValue>
+	struct SMinMax	{
+				_tValue						Min;
+				_tValue						Max;
+
+		inline	bool						operator==(const SMinMax & other)		const	noexcept	{ return Min == other.Min && Max == other.Max; }
+				bool						operator!=(const SMinMax & other)		const	noexcept	{ return !operator==(other); }
+	};
+
 	struct					SPairSinCos				{ double Sin, Cos; };
 
 	static inline			SPairSinCos				getSinCos				(double theta)																noexcept	{ return {sin(theta), cos(theta)};						}
@@ -162,11 +172,80 @@ namespace gph
 		}
 	};	// struct SCoord3
 
-	template<typename _tValue>	struct SRectangle		{ SCoord2<_tValue> Offset, Size;			};
-	template<typename _tValue>	struct SCircle			{ SCoord2<_tValue> Offset; double Radius;	};
-	template<typename _tValue>	struct STriangle		{ SCoord2<_tValue> A, B, C;					};
-	template<typename _tValue>	struct STriangle3		{ SCoord3<_tValue> A, B, C;					};
-	template<typename _tValue>	struct SLine			{ SCoord2<_tValue> A, B;					};
+
+
+#define GPK_DEFAULT_OPERATOR_NE(_otherType, ...)	\
+		inline constexpr									bool						operator!=				(const _otherType		& other)											const	noexcept	{ return !operator==(other);	}	\
+		inline constexpr									bool						operator==				(const _otherType		& other)											const	noexcept	{ return __VA_ARGS__;			}
+
+	// ---- Geometric figures and other coord-related POD structs.
+	template<typename _tElement>	struct SRectLimits		{ _tElement									Left, Top, Right, Bottom; GPK_DEFAULT_OPERATOR_NE(SRectLimits	<_tElement>, Left	== other.Left	&& Top		== other.Top	&& Right == other.Right && Bottom == other.Bottom); };
+	template<typename _tElement>	struct SRange			{ _tElement									Offset, Count			; GPK_DEFAULT_OPERATOR_NE(SRange		<_tElement>, Offset	== other.Offset	&& Count	== other.Count					); };
+	template<typename _tElement>	struct SSlice			{ _tElement									Begin, End				; GPK_DEFAULT_OPERATOR_NE(SSlice		<_tElement>, Begin	== other.Begin	&& End		== other.End					); };
+	template<typename _tElement>	struct SLine2D			{ ::gph::SCoord2<_tElement>					A, B					; GPK_DEFAULT_OPERATOR_NE(SLine2D		<_tElement>, A		== other.A		&& B		== other.B						); };
+	template<typename _tElement>	struct STriangle2D		{ ::gph::SCoord2<_tElement>					A, B, C					; GPK_DEFAULT_OPERATOR_NE(STriangle2D	<_tElement>, A		== other.A		&& B		== other.B		&& C == other.C	); };
+	template<typename _tElement>	struct SCircle2D		{ ::gph::SCoord2<_tElement>					Center	; double Radius	; GPK_DEFAULT_OPERATOR_NE(SCircle2D		<_tElement>, Center	== other.Center	&& Radius	== other.Radius					); };
+	template<typename _tElement>	struct SSphere2D		{ ::gph::SCoord2<_tElement>					Center	; double Radius	; GPK_DEFAULT_OPERATOR_NE(SSphere2D		<_tElement>, Center	== other.Center	&& Radius	== other.Radius					); };
+
+	template<typename _tElement>	struct SLine3D			{ ::gph::SCoord3<_tElement>					A, B					; GPK_DEFAULT_OPERATOR_NE(SLine3D		<_tElement>, A		== other.A		&& B		== other.B						); };
+	template<typename _tElement>	struct SRectangle3D		{ ::gph::SCoord3<_tElement>					Offset, Size			; GPK_DEFAULT_OPERATOR_NE(SRectangle3D	<_tElement>, Offset	== other.Offset	&& Size		== other.Size					); };
+	template<typename _tElement>	struct SCircle3D		{ ::gph::SCoord3<_tElement>					Center	; double Radius	; GPK_DEFAULT_OPERATOR_NE(SCircle3D		<_tElement>, Center	== other.Center	&& Radius	== other.Radius					); };
+	template<typename _tElement>	struct SSphere3D		{ ::gph::SCoord3<_tElement>					Center	; double Radius	; GPK_DEFAULT_OPERATOR_NE(SSphere3D		<_tElement>, Center	== other.Center	&& Radius	== other.Radius					); };
+	template<typename _tElement>	struct STriangle3D		{ ::gph::SCoord3<_tElement>					A, B, C					; GPK_DEFAULT_OPERATOR_NE(STriangle3D	<_tElement>, A		== other.A		&& B		== other.B		&& C == other.C	);
+		int32_t													CulledZSpecial					(const ::gph::SMinMax<_tElement>& minMax)		{
+			return ((A.z <= minMax.Min) || (B.z <= minMax.Min) || (C.z <= minMax.Min))
+				|| ((A.z >= minMax.Max) && (B.z >= minMax.Max) && (C.z >= minMax.Max))
+				? 1 : 0;
+		}
+		int32_t													CulledZ							(const ::gph::SMinMax<_tElement>& minMax)		{
+			return ((A.z  < minMax.Min) && (B.z  < minMax.Min) && (C.z  < minMax.Min))
+				|| ((A.z >= minMax.Max) && (B.z >= minMax.Max) && (C.z >= minMax.Max))
+				? 1 : 0;
+		}
+		int32_t													CulledX							(const ::gph::SMinMax<_tElement>& minMax)		{
+			return ((A.x  < minMax.Min) && (B.x  < minMax.Min) && (C.x  < minMax.Min))
+				|| ((A.x >= minMax.Max) && (B.x >= minMax.Max) && (C.x >= minMax.Max))
+				? 1 : 0;
+		}
+		int32_t													CulledY							(const ::gph::SMinMax<_tElement>& minMax)		{
+			return ((A.y  < minMax.Min) && (B.y  < minMax.Min) && (C.y  < minMax.Min))
+				|| ((A.y >= minMax.Max) && (B.y >= minMax.Max) && (C.y >= minMax.Max))
+				? 1 : 0;
+		}
+	};
+
+	template<typename _tElement>	struct STriangleWeights	{ _tElement									A, B, C					; GPK_DEFAULT_OPERATOR_NE(STriangle3D	<_tElement>, A		== other.A		&& B		== other.B		&& C == other.C	); };
+
+	template<typename _tElement>	struct SRectangle2D		{
+							::gph::SCoord2<_tElement>					Offset, Size;
+
+				GPK_DEFAULT_OPERATOR_NE(SRectangle2D<_tElement>, Offset	== other.Offset	&& Size == other.Size);
+
+		inline				::gph::SCoord2<_tElement>					Limit									()																			const	noexcept	{ return Offset + Size; }
+	};
+
+	template<typename _tElement>
+							STriangle2D<_tElement>&						translate								(::gph::STriangle2D<_tElement>& triangle, const ::gph::SCoord2<_tElement>& translation)									{
+		triangle.A															+= translation;
+		triangle.B															+= translation;
+		triangle.C															+= translation;
+		return triangle;
+	}
+
+	template<typename _tElement>
+							STriangle3D<_tElement>&						translate								(::gph::STriangle3D<_tElement>& triangle, const ::gph::SCoord3<_tElement>& translation)									{
+		triangle.A															+= translation;
+		triangle.B															+= translation;
+		triangle.C															+= translation;
+		return triangle;
+	}
+	template<typename _tElement>
+							STriangle3D<_tElement>&						scale								(::gph::STriangle3D<_tElement>& triangle, const ::gph::SCoord3<_tElement>& scale)									{
+		triangle.A.Scale(scale);
+		triangle.B.Scale(scale);
+		triangle.C.Scale(scale);
+		return triangle;
+	}
 
 	template<typename _tValue>
 	double											clamp					(_tValue value, _tValue min, _tValue max)											{ return ::std::min(::std::max(min, value), max); }
@@ -571,7 +650,7 @@ namespace gph
 	};	// struct
 
 	template<typename _tElement>
-							STriangle3<_tElement>&						transform								(::gph::STriangle3<_tElement>& triangle, const ::gph::SMatrix4<_tElement>& transform)									{
+							STriangle3D<_tElement>&						transform								(::gph::STriangle3D<_tElement>& triangle, const ::gph::SMatrix4<_tElement>& transform)									{
 		triangle.A															= transform.Transform(triangle.A);
 		triangle.B															= transform.Transform(triangle.B);
 		triangle.C															= transform.Transform(triangle.C);

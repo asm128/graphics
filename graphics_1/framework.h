@@ -7,7 +7,8 @@
 namespace gph
 {
 	struct SScene {
-		::gph::container<::gph::SRectangle<int32_t>>	Rectangles				= {};
+		::gph::container<::gph::SRectangle2D<int32_t>>	Rectangles				= {};
+		::gph::container<::gph::STriangle2D	<int32_t>>	Triangles				= {};
 		::gph::SColor									ShapeColors	[4]			=
 			{ {0xff, 0, 0, 0}
 			, {0, 0xff, 0, 0}

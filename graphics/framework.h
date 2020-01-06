@@ -10,7 +10,7 @@ namespace gph
 		::gph::container<::gph::SCoord2<float>>	ParticlePositions		= {};
 		::gph::container<float>					ParticleSpeeds			= {};
 
-		::gph::SRectangle<double>				Rectangle				= {};
+		::gph::SRectangle2D<double>				Rectangle				= {};
 		::gph::SColor							ShapeColors	[4]			=
 			{ {0xff, 0, 0, 0}
 			, {0, 0xff, 0, 0}

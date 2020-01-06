@@ -14,7 +14,7 @@ int										gph::setPixel
 
 int										gph::drawRectangle
 	(	::gph::view_grid<::gph::SColor> pixels
-	,	::gph::SRectangle<int32_t>		rectangle
+	,	::gph::SRectangle2D<int32_t>	rectangle
 	,	::gph::SColor					color
 	) {
 	for(int32_t y = 0; y < rectangle.Size.y; ++y)
@@ -25,14 +25,14 @@ int										gph::drawRectangle
 
 int										gph::drawCircle
 	(	::gph::view_grid<::gph::SColor> pixels
-	,	::gph::SCircle<int32_t>	circle
-	,	::gph::SColor			color
+	,	::gph::SCircle2D<int32_t>		circle
+	,	::gph::SColor					color
 	) {
 	for(int32_t y = -(int32_t)circle.Radius; y < (int32_t)circle.Radius; ++y)
 	for(int32_t x = -(int32_t)circle.Radius; x < (int32_t)circle.Radius; ++x) {
 		const ::gph::SCoord2<int32_t>				position				= {x, y};
 		if(position.Length() <= circle.Radius)
-			::gph::setPixel(pixels, {circle.Offset.x + x, circle.Offset.y + y}, color);
+			::gph::setPixel(pixels, {circle.Center.x + x, circle.Center.y + y}, color);
 	}
 	return 0;
 }
@@ -59,7 +59,7 @@ int										gph::drawLineHorizontal
 	return 0;
 }
 
-int										gph::drawLine			(::gph::view_grid<::gph::SColor> pixels, ::gph::SLine<int32_t> line, ::gph::SColor color) {
+int										gph::drawLine			(::gph::view_grid<::gph::SColor> pixels, ::gph::SLine2D<int32_t> line, ::gph::SColor color) {
 	int32_t										dx						= abs(line.B.x - line.A.x);
 	int32_t										dy						= -abs(line.B.y - line.A.y);
 	int32_t										sx						= line.A.x < line.B.x ? 1 : -1;

@@ -7,15 +7,15 @@
 
 namespace gph
 {
-	int												setPixel				(::gph::view_grid<::gph::SColor> pixels, ::gph::SCoord2<int32_t>	position							, ::gph::SColor color);
-	int												drawRectangle			(::gph::view_grid<::gph::SColor> pixels, ::gph::SRectangle<int32_t>	rectangle							, ::gph::SColor color);
-	int												drawCircle				(::gph::view_grid<::gph::SColor> pixels, ::gph::SCircle<int32_t>	circle								, ::gph::SColor color);
-	int												drawLineVertical		(::gph::view_grid<::gph::SColor> pixels, ::gph::SCoord2<int32_t>	linePosition, uint32_t lineLength	, ::gph::SColor color);
-	int												drawLineHorizontal		(::gph::view_grid<::gph::SColor> pixels, ::gph::SCoord2<int32_t>	linePosition, uint32_t lineLength	, ::gph::SColor color);
-	int												drawLine				(::gph::view_grid<::gph::SColor> pixels, ::gph::SLine<int32_t> line										, ::gph::SColor color);
+	int												setPixel				(::gph::view_grid<::gph::SColor> pixels, ::gph::SCoord2<int32_t>		position							, ::gph::SColor color);
+	int												drawRectangle			(::gph::view_grid<::gph::SColor> pixels, ::gph::SRectangle2D<int32_t>	rectangle							, ::gph::SColor color);
+	int												drawCircle				(::gph::view_grid<::gph::SColor> pixels, ::gph::SCircle2D<int32_t>		circle								, ::gph::SColor color);
+	int												drawLineVertical		(::gph::view_grid<::gph::SColor> pixels, ::gph::SCoord2<int32_t>		linePosition, uint32_t lineLength	, ::gph::SColor color);
+	int												drawLineHorizontal		(::gph::view_grid<::gph::SColor> pixels, ::gph::SCoord2<int32_t>		linePosition, uint32_t lineLength	, ::gph::SColor color);
+	int												drawLine				(::gph::view_grid<::gph::SColor> pixels, ::gph::SLine2D<int32_t>		line								, ::gph::SColor color);
 
 	template<typename _tValue>
-	int32_t											drawTriangle			(view_grid<SColor> pixels, const STriangle<_tValue>& triangle, const SColor& color)		{
+	int32_t											drawTriangle			(view_grid<SColor> pixels, const STriangle2D<_tValue>& triangle, const SColor& color)		{
 		// Compute triangle bounding box
 		int32_t												minX					= (int32_t)min3(triangle.A.x, triangle.B.x, triangle.C.x);
 		int32_t												minY					= (int32_t)min3(triangle.A.y, triangle.B.y, triangle.C.y);
@@ -45,7 +45,7 @@ namespace gph
 		return 0;
 	}
 	template<typename _tValue>
-	int32_t											drawTriangle			(::gph::SCoord2<uint32_t> targetSize, const STriangle<_tValue>& triangle, ::gph::container<::gph::SCoord2<int32_t>>& pixelCoords)		{
+	int32_t											drawTriangle			(::gph::SCoord2<uint32_t> targetSize, const STriangle2D<_tValue>& triangle, ::gph::container<::gph::SCoord2<int32_t>>& pixelCoords)		{
 		// Compute triangle bounding box
 		int32_t												minX					= (int32_t)min3(triangle.A.x, triangle.B.x, triangle.C.x);
 		int32_t												minY					= (int32_t)min3(triangle.A.y, triangle.B.y, triangle.C.y);
@@ -63,9 +63,9 @@ namespace gph
 		for (p.y = minY; p.y <= maxY; ++p.y)
 		for (p.x = minX; p.x <= maxX; ++p.x) {
 			// Determine barycentric coordinates
-			int													w0						= orient2d(triangle.B, triangle.C, p);
-			int													w1						= orient2d(triangle.C, triangle.A, p);
-			int													w2						= orient2d(triangle.A, triangle.B, p);
+			int													w0						= ::gph::orient2d(triangle.B, triangle.C, p);
+			int													w1						= ::gph::orient2d(triangle.C, triangle.A, p);
+			int													w2						= ::gph::orient2d(triangle.A, triangle.B, p);
 			// If p is on or inside all edges, render pixel.
 			if (w0 >= 0 && w1 >= 0 && w2 >= 0)
 				pixelCoords.push_back(p);

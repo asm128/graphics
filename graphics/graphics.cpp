@@ -28,7 +28,7 @@ int									update					(::gph::SApplication & app)		{
 		memset(framework.Pixels.begin(), 0, framework.Pixels.size() * sizeof(::gph::SColor));
 		for(int32_t y = 0; y < 2; ++y)
 		for(int32_t x = 0; x < 2; ++x) {
-			::gph::SRectangle<double>				& rectangle					= app.Scene.Rectangle;
+			::gph::SRectangle2D<double>				& rectangle					= app.Scene.Rectangle;
 			rectangle.Size						= {window.Size.x / 2.0, window.Size.y / 2.0};
 			rectangle.Offset					= {rectangle.Size.x * x, rectangle.Size.y * y};
 		}
@@ -43,9 +43,9 @@ int									update					(::gph::SApplication & app)		{
 	if( app.Scene.Rectangle.Offset.x > window.Size.x )
 		app.Scene.Rectangle.Offset.x		= 0;
 
-	::gph::STriangle<int32_t>						triangle				= {};
-	::gph::SRectangle<int32_t>						rectangle				= {{}, app.Scene.Rectangle.Size.Cast<int32_t>()};
-	::gph::SCircle<int32_t>							circle					= {{}, 16};
+	::gph::STriangle2D<int32_t>						triangle				= {};
+	::gph::SRectangle2D<int32_t>					rectangle				= {{}, app.Scene.Rectangle.Size.Cast<int32_t>()};
+	::gph::SCircle2D<int32_t>						circle					= {{}, 16};
 	for(int32_t y = 0; y < 2; ++y)
 	for(int32_t x = 0; x < 2; ++x) {
 		::gph::container<::gph::SCoord2<int32_t>>		pixelCoords;
@@ -67,7 +67,7 @@ int									update					(::gph::SApplication & app)		{
 		triangle.B							+= app.Scene.Rectangle.Offset.Cast<int32_t>() * x;
 		triangle.C							+= app.Scene.Rectangle.Offset.Cast<int32_t>() * x;
 		rectangle	.Offset					= {(int32_t)(app.Scene.Rectangle.Offset.x * x)			, (int32_t)(app.Scene.Rectangle.Offset.y * y)};
-		circle		.Offset					= ::gph::SCoord2<int32_t>{(int32_t)(app.Scene.Rectangle.Offset.x * x), (int32_t)(app.Scene.Rectangle.Offset.y * y)} + (window.Size / 4);
+		circle		.Center					= ::gph::SCoord2<int32_t>{(int32_t)(app.Scene.Rectangle.Offset.x * x), (int32_t)(app.Scene.Rectangle.Offset.y * y)} + (window.Size / 4);
 		::gph::SCoord2<int32_t>					offsetLineVertical		= ::gph::SCoord2<int32_t>{(int32_t)(app.Scene.Rectangle.Offset.x * x)		, (int32_t)(app.Scene.Rectangle.Offset.y * y) - 8}	+ (window.Size / 4);
 		::gph::SCoord2<int32_t>					offsetLineHorizontal	= ::gph::SCoord2<int32_t>{(int32_t)(app.Scene.Rectangle.Offset.x * x) - 8	, (int32_t)(app.Scene.Rectangle.Offset.y * y)}		+ (window.Size / 4);
 
@@ -82,8 +82,8 @@ int									update					(::gph::SApplication & app)		{
 			setPixel(pixels, pixelCoord, {(uint8_t)(pixelCoord.x + triangle.A.x), (uint8_t)(pixelCoord.y + triangle.A.y), (uint8_t)(pixelCoord.x + pixelCoord.y)});
 		}
 
-		::gph::SLine<int32_t>			line0	= {::gph::SCoord2<int32_t>{+8, }	, ::gph::SCoord2<int32_t>{-8, 16}};
-		::gph::SLine<int32_t>			line1	= {::gph::SCoord2<int32_t>{0, -8}	, ::gph::SCoord2<int32_t>{16, +8}};
+		::gph::SLine2D<int32_t>					line0					= {::gph::SCoord2<int32_t>{+8, }	, ::gph::SCoord2<int32_t>{-8, 16}};
+		::gph::SLine2D<int32_t>					line1					= {::gph::SCoord2<int32_t>{0, -8}	, ::gph::SCoord2<int32_t>{16, +8}};
 		line0.A.Rotate((double)framework.CountFrames);
 		line0.B.Rotate((double)framework.CountFrames);
 		line1.B.Rotate((double)framework.CountFrames);
