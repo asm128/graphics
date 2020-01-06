@@ -33,6 +33,9 @@
     <ClInclude Include="gph_container.h">
       <Filter>Header Files</Filter>
     </ClInclude>
+    <ClInclude Include="gph_framework.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="gph_draw.cpp">

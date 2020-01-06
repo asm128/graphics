@@ -166,6 +166,7 @@
     <ClInclude Include="gph_color.h" />
     <ClInclude Include="gph_container.h" />
     <ClInclude Include="gph_draw.h" />
+    <ClInclude Include="gph_framework.h" />
     <ClInclude Include="gph_math.h" />
     <ClInclude Include="gph_timer.h" />
     <ClInclude Include="gph_window.h" />

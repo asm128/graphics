@@ -1,6 +1,5 @@
 #include "gph_draw.h"
-#include "gph_timer.h"
-#include "gph_window.h"
+#include "gph_framework.h"
 
 #ifndef FRAMEWORK_H_29837472983
 #define FRAMEWORK_H_29837472983
@@ -24,11 +23,8 @@ namespace gph
 		const uint32_t							MAX_PARTICLES			= 64;
 		const double							GRAVITY					= 9.8;
 
-		SWindow									Window					= {};
-		::gph::STimer							Timer					= {};
+		::gph::SFramework						Framework				= {};
 		::gph::SScene							Scene					= {};
-		uint64_t								CountFrames				= 0;
-		::gph::container<::gph::SColor>			Pixels					= {};
 	};
 } // namespace
 
