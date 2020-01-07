@@ -15,7 +15,7 @@ namespace gph
 														view				(_tElement *elements, uint32_t count)				: Data(elements)	, Count(count)		{ if(Count && 0 == elements) { throw(""); } }
 		inline	constexpr								view				()													= default;
 
-		_tElement&										operator[]			(uint32_t index)									{ if(index >= Count) { throw(""); } return Data[index]; }
+ 		_tElement&										operator[]			(uint32_t index)									{ if(index >= Count) { throw(""); } return Data[index]; }
 		const _tElement&								operator[]			(uint32_t index)				const				{ if(index >= Count) { throw(""); } return Data[index]; }
 
 		inline constexpr	const uint32_t&				size				()								const	noexcept	{ return Count; }

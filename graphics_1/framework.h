@@ -6,9 +6,18 @@
 
 namespace gph
 {
+	struct SModel {
+		double											Rotation				= 0;
+		::gph::SCoord3<float>							Position				= {};
+		::gph::SCoord3<float>							Scale					= {1, 1, 1};
+		::gph::SCoord3<float>							Center					= {};
+	};
+
 	struct SScene {
 		::gph::container<::gph::SRectangle2D<int32_t>>	Rectangles				= {};
 		::gph::container<::gph::STriangle2D	<int32_t>>	Triangles				= {};
+		::gph::container<::gph::SCoord3		<float>>	Normals					= {};
+		::gph::container<::gph::SModel>					Models					= {};
 		::gph::SColor									ShapeColors	[4]			=
 			{ {0xff, 0, 0, 0}
 			, {0, 0xff, 0, 0}

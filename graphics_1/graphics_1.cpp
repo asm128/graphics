@@ -24,29 +24,29 @@ static constexpr const ::gph::STriangle3D<int8_t>						geometryCube	[12]						=
 	, {{1, 1, 0}, {0, 1, 0}, {0, 1, 1}}	// Top		- second
 	};
 
+// Vertex coordinates for cube faces
+static constexpr const ::gph::SCoord3<int8_t>						normalsCube	[6]						=
+	{ { 0,  0,  1}	// Right	-
+	, {-1,  0,  0}	// Back		-
+	, { 0, -1,  0}	// Bottom	-
+	, { 0,  0, -1}	// Left		-
+	, { 1,  0,  0}	// Front	-
+	, { 0,  1,  0}	// Top		-
+	};
+
 int									cleanup					(::gph::SApplication & app)		{ (void)app; return 0; }
 int									setup					(::gph::SApplication & app)		{
 	::gph::SFramework						& framework				= app.Framework;
 	::gph::SWindow							& window				= framework.Window;
 	framework.Pixels.resize(window.Size.x * window.Size.y);
 	memset(framework.Pixels.begin(), 0, framework.Pixels.size() * sizeof(::gph::SColor));
-
-	app.Scene.Rectangles.resize(4);
-	for(int32_t y = 0; y < 2; ++y)
-	for(int32_t x = 0; x < 2; ++x) {
-		::gph::SRectangle2D<int32_t>			& rectangle					= app.Scene.Rectangles[y * 2 + x];
-		rectangle.Size						= {window.Size.x / 2, window.Size.y / 2};
-		rectangle.Offset					= {rectangle.Size.x * x, rectangle.Size.y * y};
-	}
-	app.Scene.Triangles.resize(6);
-	for(uint32_t iTriangle = 0; iTriangle < app.Scene.Triangles.size(); ++iTriangle) {
-		::gph::STriangle2D<int32_t>					& triangle					= app.Scene.Triangles[iTriangle] = {};
-		triangle.A								= {-1, 0};
-		triangle.B								= {1, 0};
-		triangle.C								= {0, 2};
-		triangle.A								*= 100;
-		triangle.B								*= 100;
-		triangle.C								*= 100;
+	app.Scene.Models.resize(6);
+	for(uint32_t iModel = 0; iModel < app.Scene.Models.size(); ++iModel) {
+		::gph::SModel							& model	= app.Scene.Models[iModel]	= {};
+		model.Center						= {-0.5, 0, -.5};
+		model.Scale							= {1, 1, 1};
+		model.Position						= {5, 0, 0};
+		model.Position.RotateY(iModel * (::MATH_2PI / app.Scene.Models.size()));
 	}
 	return 0;
 }
@@ -56,41 +56,83 @@ int									update					(::gph::SApplication & app)		{
 	::gph::SWindow							& window				= framework.Window;
 	double									secondsLastFrame		= framework.Timer.TimeDelta * .000001;
 	(void)secondsLastFrame;
+	memset(framework.Pixels.begin(), 0, framework.Pixels.size() * sizeof(::gph::SColor));
 	if(window.Resized) {
 		framework.Pixels.resize(window.Size.x * window.Size.y);
 		memset(framework.Pixels.begin(), 0, framework.Pixels.size() * sizeof(::gph::SColor));
-		for(int32_t y = 0; y < 2; ++y)
-		for(int32_t x = 0; x < 2; ++x) {
-			::gph::SRectangle2D<int32_t>				& rectangle					= app.Scene.Rectangles[y * 2 + x];
-			rectangle.Size						= {window.Size.x / 2, window.Size.y / 2};
-			rectangle.Offset					= {rectangle.Size.x * x, rectangle.Size.y * y};
+	}
+	::gph::SCoord3<float>					cameraPosition			= {8, 8, 8};
+	::gph::SCoord3<float>					cameraTarget			= {0, 0, 0};
+	::gph::SCoord3<float>					cameraUp				= {0, -1, 0};
+	::gph::SCoord3<float>					lightAngle				= {8, -8, 8};
+
+	lightAngle.Normalize();
+
+	::gph::SMatrix4<float>					matrixView				= {};
+	::gph::SMatrix4<float>					matrixProjection		= {};
+	matrixView.LookAt(cameraPosition, cameraTarget, cameraUp);
+
+
+	app.Scene.Triangles	.resize((uint32_t)::std::size(geometryCube));
+	app.Scene.Normals	.resize((uint32_t)::std::size(normalsCube));
+	for(uint32_t iModel = 0; iModel < app.Scene.Models.size(); ++iModel) {
+		::gph::SModel							& model	= app.Scene.Models[iModel];
+		for(uint32_t iTriangle = 0; iTriangle < app.Scene.Triangles.size(); ++iTriangle) {
+			::gph::STriangle3D<float>				triangle				= geometryCube[iTriangle].Cast<float>();
+			double									& rotation				= model.Rotation;
+			rotation							+= secondsLastFrame / 10;
+			if(iTriangle % 2) {
+				::gph::SCoord3<float>					normal					= normalsCube[iTriangle / 2].Cast<float>();
+				normal.RotateY(rotation);
+				app.Scene.Normals[iTriangle / 2]	= normal;
+			}
+			model.Position.RotateY(secondsLastFrame / 50);
+			triangle.A							+= model.Center;
+			triangle.B							+= model.Center;
+			triangle.C							+= model.Center;
+			triangle.A.RotateY(rotation);
+			triangle.B.RotateY(rotation);
+			triangle.C.RotateY(rotation);
+			triangle.A							-= model.Center;
+			triangle.B							-= model.Center;
+			triangle.C							-= model.Center;
+			triangle.A.Scale(model.Scale);
+			triangle.B.Scale(model.Scale);
+			triangle.C.Scale(model.Scale);
+			triangle.A							+= model.Position;
+			triangle.B							+= model.Position;
+			triangle.C							+= model.Position;
+			triangle.A.Scale(100);
+			triangle.B.Scale(100);
+			triangle.C.Scale(100);
+			::gph::transform(triangle, matrixView);
+			app.Scene.Triangles[iTriangle]		=
+				{ {(int32_t)triangle.A.x, (int32_t)triangle.A.y}
+				, {(int32_t)triangle.B.x, (int32_t)triangle.B.y}
+				, {(int32_t)triangle.C.x, (int32_t)triangle.C.y}
+				};
 		}
-	}
-	::gph::view<::gph::SColor>				view_colors				= app.Scene.ShapeColors;
-	::gph::view_grid<::gph::SColor>			pixels					= {framework.Pixels.begin(), window.Size.Cast<uint32_t>()};
-	for(uint32_t iRectangle = 0; iRectangle < app.Scene.Rectangles.size(); ++iRectangle) {
-		const ::gph::SColor						colorRectangle			= view_colors[iRectangle % ::std::size(app.Scene.ShapeColors)] * ((framework.CountFrames % 255) / 255.0);
-		::gph::drawRectangle(pixels, {app.Scene.Rectangles[iRectangle].Offset.Cast<int32_t>(), app.Scene.Rectangles[iRectangle].Size.Cast<int32_t>()}, colorRectangle);
-	}
-	::gph::container<::gph::SCoord2<int32_t>>trianglePixels			= {};
-	for(uint32_t iTriangle = 0; iTriangle < app.Scene.Triangles.size(); ++iTriangle) {
-		::gph::STriangle2D<int32_t>				triangle					= app.Scene.Triangles[iTriangle];
-		double									rotation					= iTriangle * (MATH_2PI / app.Scene.Triangles.size()) + framework.CountFrames / 100.0f;
-		triangle.A.Rotate(rotation);
-		triangle.B.Rotate(rotation);
-		triangle.C.Rotate(rotation);
-		::gph::SCoord2<int32_t>					position					= {0, 175};
-		position.Rotate(rotation);
-		position							+= window.Size / 2.0;
-		triangle.A							+= position;
-		triangle.B							+= position;
-		triangle.C							+= position;
-		const ::gph::SColor						colorTriangle				= view_colors[(iTriangle + (uint32_t)framework.CountFrames / 100) % ::std::size(app.Scene.ShapeColors)] * (((framework.CountFrames + 16 * iTriangle) % 255) / 255.0);;// / 2;
-		trianglePixels.resize(0);
-		::gph::drawTriangle(pixels.metrics(), triangle, trianglePixels);
-		for(uint32_t iPixel = 0; iPixel < trianglePixels.size(); ++iPixel) {
-			const ::gph::SCoord2<int32_t>			pixelCoord					= trianglePixels[iPixel];
-			pixels[pixelCoord.y][pixelCoord.x]	= colorTriangle;
+
+		::gph::view<::gph::SColor>				view_colors				= app.Scene.ShapeColors;
+		::gph::view_grid<::gph::SColor>			pixels					= {framework.Pixels.begin(), window.Size.Cast<uint32_t>()};
+		::gph::container<::gph::SCoord2<int32_t>>trianglePixels			= {};
+		for(uint32_t iTriangle = 0; iTriangle < app.Scene.Triangles.size(); ++iTriangle) {
+			::gph::STriangle2D<int32_t>				triangle				= app.Scene.Triangles[iTriangle];
+			::gph::SCoord2<int32_t>					position				= window.Size / 2.0;
+			triangle.A							+= position;
+			triangle.B							+= position;
+			triangle.C							+= position;
+
+			::gph::SColor							colorTriangle			= ::gph::SColor{0xFF, 0, 0};
+			::gph::SCoord3<float>					normal					= app.Scene.Normals[iTriangle / 2];
+			colorTriangle						= (colorTriangle / 10.0) + (colorTriangle * normal.Dot(lightAngle));
+
+			trianglePixels.resize(0);
+			::gph::drawTriangle(pixels.metrics(), triangle, trianglePixels);
+			for(uint32_t iPixel = 0; iPixel < trianglePixels.size(); ++iPixel) {
+				const ::gph::SCoord2<int32_t>			pixelCoord					= trianglePixels[iPixel];
+				pixels[pixelCoord.y][pixelCoord.x]	= colorTriangle;
+			}
 		}
 	}
 	framework.Timer.Tick();

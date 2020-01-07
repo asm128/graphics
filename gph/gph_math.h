@@ -212,6 +212,8 @@ namespace gph
 				|| ((A.y >= minMax.Max) && (B.y >= minMax.Max) && (C.y >= minMax.Max))
 				? 1 : 0;
 		}
+		template<typename _tOther>
+		::gph::STriangle3D<_tOther>								Cast							()		const	{ return {A.Cast<_tOther>(), B.Cast<_tOther>(), C.Cast<_tOther>()}; }
 	};
 
 	template<typename _tElement>	struct STriangleWeights	{ _tElement									A, B, C					; GPK_DEFAULT_OPERATOR_NE(STriangle3D	<_tElement>, A		== other.A		&& B		== other.B		&& C == other.C	); };
