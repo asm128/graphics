@@ -59,22 +59,35 @@ int									update					(::gph::SApplication & app)		{
 	memset(framework.Pixels.begin(), 0, framework.Pixels.size() * sizeof(::gph::SColor));
 	if(window.Resized) {
 		framework.Pixels.resize(window.Size.x * window.Size.y);
+		if(0 == framework.Window.Size.y || 0 == framework.Window.Size.x)
+			return 0;
 		memset(framework.Pixels.begin(), 0, framework.Pixels.size() * sizeof(::gph::SColor));
 	}
-	::gph::SCoord3<float>					cameraPosition			= {8, 8, 8};
+	::gph::SCoord3<float>					cameraPosition			= {10, 0, 0};
 	::gph::SCoord3<float>					cameraTarget			= {0, 0, 0};
-	::gph::SCoord3<float>					cameraUp				= {0, -1, 0};
-	::gph::SCoord3<float>					lightAngle				= {8, -8, 8};
+	::gph::SCoord3<float>					cameraUp				= {0, 1, 0};
+	::gph::SCoord3<float>					lightAngle				= {10, 5, 0};
 
 	lightAngle.Normalize();
 
 	::gph::SMatrix4<float>					matrixView				= {};
 	::gph::SMatrix4<float>					matrixProjection		= {};
 	matrixView.LookAt(cameraPosition, cameraTarget, cameraUp);
+	double									planeFar				= 100;
+	double									planeNear				= 0.01;
+	matrixProjection.FieldOfView(.25 * MATH_PI, framework.Window.Size.x / (double)framework.Window.Size.y, planeNear, planeFar);
 
+	::gph::SMatrix4<float>					viewport				= {};
+	viewport._11						= (float)(2.0 / -framework.Window.Size.x);
+	viewport._22						= (float)(2.0 / framework.Window.Size.y);
+	viewport._33						= (float)(1.0 / (planeFar - planeNear));
+	viewport._43						= (float)(-planeNear * (1.0 / (planeFar - planeNear)));
+	viewport._44						= (float)(1.0);
 
 	app.Scene.Triangles	.resize((uint32_t)::std::size(geometryCube));
 	app.Scene.Normals	.resize((uint32_t)::std::size(normalsCube));
+	matrixView							= matrixView * matrixProjection;
+	matrixView							= matrixView * viewport.GetInverse();
 	for(uint32_t iModel = 0; iModel < app.Scene.Models.size(); ++iModel) {
 		::gph::SModel							& model	= app.Scene.Models[iModel];
 		for(uint32_t iTriangle = 0; iTriangle < app.Scene.Triangles.size(); ++iTriangle) {
@@ -102,9 +115,6 @@ int									update					(::gph::SApplication & app)		{
 			triangle.A							+= model.Position;
 			triangle.B							+= model.Position;
 			triangle.C							+= model.Position;
-			triangle.A.Scale(100);
-			triangle.B.Scale(100);
-			triangle.C.Scale(100);
 			::gph::transform(triangle, matrixView);
 			app.Scene.Triangles[iTriangle]		=
 				{ {(int32_t)triangle.A.x, (int32_t)triangle.A.y}
@@ -123,7 +133,7 @@ int									update					(::gph::SApplication & app)		{
 			triangle.B							+= position;
 			triangle.C							+= position;
 
-			::gph::SColor							colorTriangle			= ::gph::SColor{0xFF, 0, 0};
+			::gph::SColor							colorTriangle			= view_colors[iModel % view_colors.size()];
 			::gph::SCoord3<float>					normal					= app.Scene.Normals[iTriangle / 2];
 			colorTriangle						= (colorTriangle / 10.0) + (colorTriangle * normal.Dot(lightAngle));
 
